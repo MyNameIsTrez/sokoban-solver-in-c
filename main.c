@@ -20,6 +20,9 @@ enum tile map[MAX_HEIGHT][MAX_WIDTH];
 size_t width = 0;
 size_t height = 0;
 
+size_t player_x;
+size_t player_y;
+
 static char tile_to_char(enum tile t) {
 	switch (t) {
 		case FLOOR:
@@ -55,6 +58,8 @@ static enum tile char_to_tile(char c) {
 static void print_map(void) {
 	printf("width: %zu\n", width);
 	printf("height: %zu\n", height);
+	printf("player_x: %zu\n", player_x);
+	printf("player_y: %zu\n", player_y);
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
 			printf("%c", tile_to_char(map[y][x]));
@@ -70,7 +75,12 @@ int main(void) {
 	while (getline(&line, &n, stdin) > 0) {
 		size_t len = 0;
 		while (line[len] != '\n') {
-			map[height][len] = char_to_tile(line[len]);
+			enum tile t = char_to_tile(line[len]);
+			map[height][len] = t;
+			if (t == PLAYER) {
+				player_x = len;
+				player_y = height;
+			}
 			len++;
 		}
 		width = len > width ? len : width;
