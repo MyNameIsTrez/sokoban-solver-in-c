@@ -7,21 +7,30 @@
 #define MAX_HEIGHT 420
 #define MAX_WIDTH 420
 
+#define MAX_MOVES 420
+
+typedef int64_t i64;
+
 enum tile {
 	FLOOR,
 	WALL,
 	BOX,
 	STORAGE,
-	PLAYER,
+	STORED_BOX,
 };
 
-enum tile map[MAX_HEIGHT][MAX_WIDTH];
+static enum tile map[MAX_HEIGHT][MAX_WIDTH];
 
-size_t width = 0;
-size_t height = 0;
+static char moves[MAX_MOVES];
+static size_t move_count;
 
-size_t player_x;
-size_t player_y;
+static size_t width = 0;
+static size_t height = 0;
+
+static size_t player_x;
+static size_t player_y;
+
+static i64 empty_storages = 0;
 
 static char tile_to_char(enum tile t) {
 	switch (t) {
@@ -33,8 +42,8 @@ static char tile_to_char(enum tile t) {
 			return '$';
 		case STORAGE:
 			return '.';
-		case PLAYER:
-			return '@';
+		case STORED_BOX:
+			return '$';
 	}
 	abort();
 }
@@ -49,8 +58,6 @@ static enum tile char_to_tile(char c) {
 			return BOX;
 		case '.':
 			return STORAGE;
-		case '@':
-			return PLAYER;
 	}
 	abort();
 }
@@ -60,12 +67,56 @@ static void print_map(void) {
 	printf("height: %zu\n", height);
 	printf("player_x: %zu\n", player_x);
 	printf("player_y: %zu\n", player_y);
+	printf("empty_storages: %zu\n", empty_storages);
+	printf("moves: '%.*s'\n", (int)move_count, moves);
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
-			printf("%c", tile_to_char(map[y][x]));
+			if (x == player_x && y == player_y) {
+				printf("@");
+			} else {
+				printf("%c", tile_to_char(map[y][x]));
+			}
 		}
 		printf("\n");
 	}
+	printf("\n");
+}
+
+static void solve(void);
+
+static void check_is_solved(void) {
+	if (empty_storages == 0) {
+		printf("Solved!\n");
+		print_map();
+		exit(EXIT_SUCCESS);
+	}
+}
+
+static void up(void) {
+	if (map[player_y-1][player_x] == BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
+		map[player_y-1][player_x] = FLOOR;
+		map[player_y-2][player_x] = map[player_y-2][player_x] == FLOOR ? BOX : STORED_BOX;
+		if (map[player_y-2][player_x] == STORED_BOX) {
+			empty_storages--;
+			check_is_solved();
+		}
+		player_y--;
+		moves[move_count++] = 'u';
+
+		solve();
+
+		map[player_y-2][player_x] = map[player_y-2][player_x] == BOX ? FLOOR : STORAGE;
+		map[player_y-1][player_x] = BOX;
+		if (map[player_y-2][player_x] == STORED_BOX) {
+			empty_storages++;
+		}
+		player_y++;
+		move_count--;
+	}
+}
+
+static void solve(void) {
+	up();
 }
 
 int main(void) {
@@ -75,11 +126,16 @@ int main(void) {
 	while (getline(&line, &n, stdin) > 0) {
 		size_t len = 0;
 		while (line[len] != '\n') {
-			enum tile t = char_to_tile(line[len]);
-			map[height][len] = t;
-			if (t == PLAYER) {
+			char c = line[len];
+			if (c == '@') {
 				player_x = len;
 				player_y = height;
+			} else {
+				enum tile t = char_to_tile(c);
+				if (t == STORAGE) {
+					empty_storages++;
+				}
+				map[height][len] = t;
 			}
 			len++;
 		}
@@ -89,4 +145,5 @@ int main(void) {
 	free(line);
 
 	print_map();
+	solve();
 }
