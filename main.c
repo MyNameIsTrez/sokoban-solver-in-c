@@ -82,8 +82,6 @@ static void print_map(void) {
 	printf("\n");
 }
 
-static void solve(void);
-
 static void check_is_solved(void) {
 	if (empty_storages == 0) {
 		printf("Solved!\n");
@@ -92,26 +90,28 @@ static void check_is_solved(void) {
 	}
 }
 
+static void solve(void);
+
 static void up(void) {
 	if (map[player_y-1][player_x] == BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
+		moves[move_count++] = 'u';
 		map[player_y-1][player_x] = FLOOR;
 		map[player_y-2][player_x] = map[player_y-2][player_x] == FLOOR ? BOX : STORED_BOX;
-		if (map[player_y-2][player_x] == STORED_BOX) {
+		player_y--;
+		if (map[player_y-1][player_x] == STORED_BOX) {
 			empty_storages--;
 			check_is_solved();
 		}
-		player_y--;
-		moves[move_count++] = 'u';
 
 		solve();
 
-		map[player_y-2][player_x] = map[player_y-2][player_x] == BOX ? FLOOR : STORAGE;
-		map[player_y-1][player_x] = BOX;
+		move_count--;
+		player_y++;
 		if (map[player_y-2][player_x] == STORED_BOX) {
 			empty_storages++;
 		}
-		player_y++;
-		move_count--;
+		map[player_y-2][player_x] = map[player_y-2][player_x] == BOX ? FLOOR : STORAGE;
+		map[player_y-1][player_x] = BOX;
 	}
 }
 
