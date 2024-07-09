@@ -6,7 +6,6 @@
 
 ## Future plans
 
-- Memoize by hashing the moves string
 - IDDFS
 - Make version of the program that tracks contiguous movable areas, so that the solver doesn't have to move the player
 - Check if letting the width, height, and map be #defines helps the compiler with optimization
