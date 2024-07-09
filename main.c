@@ -93,7 +93,13 @@ static void check_is_solved(void) {
 static void solve(void);
 
 static void up(void) {
-	if (map[player_y-1][player_x] == BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
+	if (map[player_y-1][player_x] == FLOOR || map[player_y-1][player_x] == STORAGE) {
+		moves[move_count++] = 'u';
+		player_y--;
+		solve();
+		move_count--;
+		player_y++;
+	} else if (map[player_y-1][player_x] == BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
 		moves[move_count++] = 'u';
 		map[player_y-1][player_x] = FLOOR;
 		map[player_y-2][player_x] = map[player_y-2][player_x] == FLOOR ? BOX : STORED_BOX;
@@ -116,7 +122,13 @@ static void up(void) {
 }
 
 static void down(void) {
-	if (map[player_y+1][player_x] == BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
+	if (map[player_y+1][player_x] == FLOOR || map[player_y+1][player_x] == STORAGE) {
+		moves[move_count++] = 'd';
+		player_y++;
+		solve();
+		move_count--;
+		player_y--;
+	} else if (map[player_y+1][player_x] == BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
 		moves[move_count++] = 'd';
 		map[player_y+1][player_x] = FLOOR;
 		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
@@ -139,7 +151,13 @@ static void down(void) {
 }
 
 static void left(void) {
-	if (map[player_y][player_x-1] == BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
+	if (map[player_y][player_x-1] == FLOOR || map[player_y][player_x-1] == STORAGE) {
+		moves[move_count++] = 'l';
+		player_x--;
+		solve();
+		move_count--;
+		player_x++;
+	} else if (map[player_y][player_x-1] == BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
 		moves[move_count++] = 'l';
 		map[player_y][player_x-1] = FLOOR;
 		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
@@ -162,7 +180,13 @@ static void left(void) {
 }
 
 static void right(void) {
-	if (map[player_y][player_x+1] == BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
+	if (map[player_y][player_x+1] == FLOOR || map[player_y][player_x+1] == STORAGE) {
+		moves[move_count++] = 'r';
+		player_x++;
+		solve();
+		move_count--;
+		player_x--;
+	} else if (map[player_y][player_x+1] == BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
 		moves[move_count++] = 'r';
 		map[player_y][player_x+1] = FLOOR;
 		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
