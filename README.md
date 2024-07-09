@@ -1,1 +1,5 @@
-# sokoban-solver-in-c
+# Sokoban solver in C
+
+## Running
+
+`./tests.sh`
