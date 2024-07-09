@@ -115,8 +115,80 @@ static void up(void) {
 	}
 }
 
+static void down(void) {
+	if (map[player_y+1][player_x] == BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
+		moves[move_count++] = 'd';
+		map[player_y+1][player_x] = FLOOR;
+		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
+		player_y++;
+		if (map[player_y+1][player_x] == STORED_BOX) {
+			empty_storages--;
+			check_is_solved();
+		}
+
+		solve();
+
+		move_count--;
+		player_y--;
+		if (map[player_y+2][player_x] == STORED_BOX) {
+			empty_storages++;
+		}
+		map[player_y+2][player_x] = map[player_y+2][player_x] == BOX ? FLOOR : STORAGE;
+		map[player_y+1][player_x] = BOX;
+	}
+}
+
+static void left(void) {
+	if (map[player_y][player_x-1] == BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
+		moves[move_count++] = 'l';
+		map[player_y][player_x-1] = FLOOR;
+		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
+		player_x--;
+		if (map[player_y][player_x-1] == STORED_BOX) {
+			empty_storages--;
+			check_is_solved();
+		}
+
+		solve();
+
+		move_count--;
+		player_x++;
+		if (map[player_y][player_x-2] == STORED_BOX) {
+			empty_storages++;
+		}
+		map[player_y][player_x-2] = map[player_y][player_x-2] == BOX ? FLOOR : STORAGE;
+		map[player_y][player_x-1] = BOX;
+	}
+}
+
+static void right(void) {
+	if (map[player_y][player_x+1] == BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
+		moves[move_count++] = 'r';
+		map[player_y][player_x+1] = FLOOR;
+		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
+		player_x++;
+		if (map[player_y][player_x+1] == STORED_BOX) {
+			empty_storages--;
+			check_is_solved();
+		}
+
+		solve();
+
+		move_count--;
+		player_x--;
+		if (map[player_y][player_x+2] == STORED_BOX) {
+			empty_storages++;
+		}
+		map[player_y][player_x+2] = map[player_y][player_x+2] == BOX ? FLOOR : STORAGE;
+		map[player_y][player_x+1] = BOX;
+	}
+}
+
 static void solve(void) {
 	up();
+	down();
+	left();
+	right();
 }
 
 int main(void) {
@@ -146,4 +218,7 @@ int main(void) {
 
 	print_map();
 	solve();
+
+	fprintf(stderr, "No solution was found :(\n");
+	exit(EXIT_FAILURE);
 }
