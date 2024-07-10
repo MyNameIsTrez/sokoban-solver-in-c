@@ -114,6 +114,11 @@ static void up(void) {
 		path_length--;
 		player_y++;
 	} else if (map[player_y-1][player_x] == BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
+		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+		if (map[player_y-2][player_x] == FLOOR && map[player_y-3][player_x] == WALL && (map[player_y-2][player_x-1] == WALL || map[player_y-2][player_x+1] == WALL)) {
+			return;
+		}
+
 		path[path_length++] = 'u';
 		map[player_y-1][player_x] = FLOOR;
 		map[player_y-2][player_x] = map[player_y-2][player_x] == FLOOR ? BOX : STORED_BOX;
@@ -143,6 +148,11 @@ static void down(void) {
 		path_length--;
 		player_y--;
 	} else if (map[player_y+1][player_x] == BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
+		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+		if (map[player_y+2][player_x] == FLOOR && map[player_y+3][player_x] == WALL && (map[player_y+2][player_x-1] == WALL || map[player_y+2][player_x+1] == WALL)) {
+			return;
+		}
+
 		path[path_length++] = 'd';
 		map[player_y+1][player_x] = FLOOR;
 		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
@@ -172,6 +182,11 @@ static void left(void) {
 		path_length--;
 		player_x++;
 	} else if (map[player_y][player_x-1] == BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
+		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+		if (map[player_y][player_x-2] == FLOOR && map[player_y][player_x-3] == WALL && (map[player_y-1][player_x-2] == WALL || map[player_y+1][player_x-2] == WALL)) {
+			return;
+		}
+
 		path[path_length++] = 'l';
 		map[player_y][player_x-1] = FLOOR;
 		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
@@ -201,6 +216,11 @@ static void right(void) {
 		path_length--;
 		player_x--;
 	} else if (map[player_y][player_x+1] == BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
+		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+		if (map[player_y][player_x+2] == FLOOR && map[player_y][player_x+3] == WALL && (map[player_y-1][player_x+2] == WALL || map[player_y+1][player_x+2] == WALL)) {
+			return;
+		}
+
 		path[path_length++] = 'r';
 		map[player_y][player_x+1] = FLOOR;
 		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
@@ -268,7 +288,7 @@ static void solve(void) {
 		i = chains[i];
 	}
 
-	// fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
+	fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
 	maps[maps_size] = map_strings + map_strings_size;
 	memcpy(map_strings + map_strings_size, map_string, map_string_length+1);
 	map_strings_size += map_string_length+1;
