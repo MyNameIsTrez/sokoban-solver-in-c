@@ -12,8 +12,9 @@ fi
 # < maps/box_on_storage.txt ./a.out
 # < maps/down_twice.txt ./a.out
 # < maps/left_twice.txt ./a.out
-< maps/level_963.txt ./a.out
+# < maps/level_963.txt ./a.out
 # < maps/level_40862.txt ./a.out
+< maps/level_47601.txt ./a.out
 # < maps/right_twice.txt ./a.out
 # < maps/sokoban_on_storage.txt ./a.out
 # < maps/up_twice.txt ./a.out
