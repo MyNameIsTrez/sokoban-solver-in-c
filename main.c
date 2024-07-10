@@ -9,9 +9,10 @@
 #define MAX_WIDTH 420
 
 #define MAX_PATH_LENGTH 420420
-#define MAX_PATHS 420420
-#define MAX_PATH_STRINGS_CHARS 420420
-#define MAX_BUCKETS_PATHS 420420
+#define MAX_MAPS 420420
+#define MAX_MAP_STRING_LENGTH 420420
+#define MAX_MAP_STRINGS_CHARS 420420
+#define MAX_BUCKETS 420420
 
 typedef uint32_t u32;
 typedef int64_t i64;
@@ -37,14 +38,17 @@ static i64 empty_storages = 0;
 static char path[MAX_PATH_LENGTH];
 static size_t path_length;
 
-static char *paths[MAX_PATHS];
-static size_t paths_size;
+static char *maps[MAX_MAPS];
+static size_t maps_size;
 
-static char path_strings[MAX_PATH_STRINGS_CHARS];
-static size_t path_strings_size;
+static char map_string[MAX_MAP_STRING_LENGTH];
+static size_t map_string_length;
 
-static u32 buckets[MAX_PATHS];
-static u32 chains[MAX_PATHS];
+static char map_strings[MAX_MAP_STRINGS_CHARS];
+static size_t map_strings_size;
+
+static u32 buckets[MAX_MAPS];
+static u32 chains[MAX_MAPS];
 
 static char tile_to_char(enum tile t) {
 	switch (t) {
@@ -85,11 +89,7 @@ static void print_map(void) {
 	printf("path: '%.*s'\n", (int)path_length, path);
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
-			if (x == player_x && y == player_y) {
-				printf("@");
-			} else {
-				printf("%c", tile_to_char(map[y][x]));
-			}
+			printf("%c", x == player_x && y == player_y ? '@' : tile_to_char(map[y][x]));
 		}
 		printf("\n");
 	}
@@ -222,6 +222,17 @@ static void right(void) {
 	}
 }
 
+static void stringify_map(void) {
+	map_string_length = 0;
+	for (size_t y = 0; y < height; y++) {
+		for (size_t x = 0; x < width; x++) {
+			map_string[map_string_length++] = x == player_x && y == player_y ? '@' : tile_to_char(map[y][x]);
+		}
+		map_string[map_string_length++] = '\n';
+	}
+	map_string[map_string_length] = '\0';
+}
+
 // From https://sourceware.org/git/?p=binutils-gdb.git;a=blob;f=bfd/elf.c#l193
 static u32 elf_hash(const char *namearg) {
 	u32 h = 0;
@@ -233,31 +244,39 @@ static u32 elf_hash(const char *namearg) {
 }
 
 static void solve(void) {
-	u32 bucket_index = elf_hash(path) % MAX_BUCKETS_PATHS;
+	stringify_map();
 
+	u32 bucket_index = elf_hash(map_string) % MAX_BUCKETS;
+
+	// fprintf(stderr, "bucket_index: %u\n", bucket_index);
 	u32 i = buckets[bucket_index];
+	// fprintf(stderr, "i == %u\n", i);
 
 	while (1) {
 		if (i == UINT32_MAX) {
 			break;
 		}
 
-		if (strcmp(path, paths[i]) == 0) {
-			return; // Memoization, by returning if the path has been seen before
+		// fprintf(stderr, "Comparing map:\n%.*s\n", (int)map_string_length, map_string);
+		// fprintf(stderr, "with memoized map:\n%s\n", maps[i]);
+		// abort();
+		if (strcmp(map_string, maps[i]) == 0) {
+			// abort();
+			return; // Memoization, by returning if the map_string has been seen before
 		}
 
 		i = chains[i];
 	}
 
-	printf("Memoizing path '%.*s'\n", (int)path_length, path);
-	memcpy(path_strings+path_strings_size, path, path_length);
-	path_strings_size += path_length;
-	path_strings[path_strings_size] = '\0';
-	path_strings_size++;
+	// fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
+	maps[maps_size] = map_strings + map_strings_size;
+	memcpy(map_strings + map_strings_size, map_string, map_string_length+1);
+	map_strings_size += map_string_length+1;
 
-	// If this path hasn't been seen before, memoize it
-	chains[paths_size] = buckets[bucket_index];
-	buckets[bucket_index] = paths_size++;
+	// If this map hasn't been seen before, memoize it
+	chains[maps_size] = buckets[bucket_index];
+	// fprintf(stderr, "buckets[%u] = %zu\n", bucket_index, maps_size);
+	buckets[bucket_index] = maps_size++;
 
 	up();
 	down();
@@ -292,7 +311,7 @@ int main(void) {
 
 	print_map();
 
-	memset(buckets, UINT32_MAX, MAX_BUCKETS_PATHS * sizeof(u32));
+	memset(buckets, UINT32_MAX, MAX_BUCKETS * sizeof(u32));
 	solve();
 
 	fprintf(stderr, "No solution was found :(\n");
