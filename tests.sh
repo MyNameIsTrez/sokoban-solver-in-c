@@ -3,8 +3,8 @@
 # gcc iddfs.c -lm -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -Ofast -march=native
 # gcc iddfs.c -lm -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -fsanitize=address,undefined
 
-# gcc bfs.c -lm -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -Ofast -march=native
-gcc bfs.c -lm -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -fsanitize=address,undefined
+gcc bfs.c -lm -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -Ofast -march=native
+# gcc bfs.c -lm -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -fsanitize=address,undefined
 
 if [[ $? -ne 0 ]]
 then

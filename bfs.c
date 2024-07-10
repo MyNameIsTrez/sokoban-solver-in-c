@@ -421,6 +421,8 @@ static char *stringify_map(void) {
 }
 
 static void solve(void) {
+	size_t depth = 0;
+
 	while (queue_start_index != queue_end_index) {
 		struct entry e = queue[queue_start_index++];
 		queue_start_index %= QUEUE_LENGTH;
@@ -431,6 +433,11 @@ static void solve(void) {
 		char *map_string = stringify_map();
 		// fprintf(stderr, "Dequeued map:\n%s", map_string);
 		path_length = strlen(e.path);
+		if (path_length > depth) {
+			depth = path_length;
+			printf("Depth %zu\n", depth);
+			print_bfs_stats();
+		}
 		memcpy(path, e.path, path_length);
 		// fprintf(stderr, "With path that is %zu steps long:\n'%.*s'\n\n", path_length, (int)path_length, path);
 		empty_storages = e.empty_storages;
