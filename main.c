@@ -48,6 +48,9 @@ static size_t map_string_length;
 static char map_strings[MAX_MAP_STRINGS_CHARS];
 static size_t map_strings_size;
 
+static size_t current_solve_calls;
+static size_t total_solve_calls;
+
 static u32 buckets[MAX_MAPS];
 static u32 chains[MAX_MAPS];
 
@@ -92,6 +95,9 @@ static void print_map(void) {
 	printf("player_y: %zu\n", player_y);
 	printf("empty_storages: %zu\n", empty_storages);
 	printf("path: '%.*s'\n", (int)path_length, path);
+	printf("current_solve_calls: %zu\n", current_solve_calls);
+	printf("total_solve_calls: %zu\n", total_solve_calls);
+	printf("'wasted' solve() calls on iterative deepening: %f%%\n", (double)(total_solve_calls - current_solve_calls) / total_solve_calls * 100);
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
 			printf("%c", x == player_x && y == player_y ? '@' : tile_to_char(map[y][x]));
@@ -369,6 +375,9 @@ static u32 elf_hash(const char *namearg) {
 }
 
 static void solve(size_t depth) {
+	current_solve_calls++;
+	total_solve_calls++;
+
 	if (depth > max_depth) {
 		return;
 	}
@@ -419,6 +428,7 @@ static void reset(void) {
 	maps_size = 0;
 	map_string_length = 0;
 	map_strings_size = 0;
+	current_solve_calls = 0;
 	memset(buckets, UINT32_MAX, MAX_BUCKETS * sizeof(u32));
 }
 
