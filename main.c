@@ -53,8 +53,6 @@ static size_t total_solve_calls;
 static u32 buckets[MAX_MAPS];
 static u32 chains[MAX_MAPS];
 
-static size_t max_depth = 1;
-
 static char tile_to_char(enum tile t) {
 	switch (t) {
 		case FLOOR:
@@ -120,7 +118,7 @@ static void up(size_t depth) {
 	if (map[player_y-1][player_x] == FLOOR || map[player_y-1][player_x] == STORAGE) {
 		path[path_length++] = 'u';
 		player_y--;
-		solve(depth+1);
+		solve(depth-1);
 		path_length--;
 		player_y++;
 	} else if (map[player_y-1][player_x] == BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
@@ -138,7 +136,7 @@ static void up(size_t depth) {
 			check_is_solved();
 		}
 
-		solve(depth+1);
+		solve(depth-1);
 
 		path_length--;
 		player_y++;
@@ -162,7 +160,7 @@ static void up(size_t depth) {
 			empty_storages--;
 		}
 
-		solve(depth+1);
+		solve(depth-1);
 
 		path_length--;
 		player_y++;
@@ -179,7 +177,7 @@ static void down(size_t depth) {
 	if (map[player_y+1][player_x] == FLOOR || map[player_y+1][player_x] == STORAGE) {
 		path[path_length++] = 'd';
 		player_y++;
-		solve(depth+1);
+		solve(depth-1);
 		path_length--;
 		player_y--;
 	} else if (map[player_y+1][player_x] == BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
@@ -197,7 +195,7 @@ static void down(size_t depth) {
 			check_is_solved();
 		}
 
-		solve(depth+1);
+		solve(depth-1);
 
 		path_length--;
 		player_y--;
@@ -221,7 +219,7 @@ static void down(size_t depth) {
 			empty_storages--;
 		}
 
-		solve(depth+1);
+		solve(depth-1);
 
 		path_length--;
 		player_y--;
@@ -238,7 +236,7 @@ static void left(size_t depth) {
 	if (map[player_y][player_x-1] == FLOOR || map[player_y][player_x-1] == STORAGE) {
 		path[path_length++] = 'l';
 		player_x--;
-		solve(depth+1);
+		solve(depth-1);
 		path_length--;
 		player_x++;
 	} else if (map[player_y][player_x-1] == BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
@@ -256,7 +254,7 @@ static void left(size_t depth) {
 			check_is_solved();
 		}
 
-		solve(depth+1);
+		solve(depth-1);
 
 		path_length--;
 		player_x++;
@@ -280,7 +278,7 @@ static void left(size_t depth) {
 			empty_storages--;
 		}
 
-		solve(depth+1);
+		solve(depth-1);
 
 		path_length--;
 		player_x++;
@@ -297,7 +295,7 @@ static void right(size_t depth) {
 	if (map[player_y][player_x+1] == FLOOR || map[player_y][player_x+1] == STORAGE) {
 		path[path_length++] = 'r';
 		player_x++;
-		solve(depth+1);
+		solve(depth-1);
 		path_length--;
 		player_x--;
 	} else if (map[player_y][player_x+1] == BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
@@ -315,7 +313,7 @@ static void right(size_t depth) {
 			check_is_solved();
 		}
 
-		solve(depth+1);
+		solve(depth-1);
 
 		path_length--;
 		player_x--;
@@ -339,7 +337,7 @@ static void right(size_t depth) {
 			empty_storages--;
 		}
 
-		solve(depth+1);
+		solve(depth-1);
 
 		path_length--;
 		player_x--;
@@ -377,7 +375,7 @@ static void solve(size_t depth) {
 	current_solve_calls++;
 	total_solve_calls++;
 
-	if (depth > max_depth) {
+	if (depth == 0) {
 		return;
 	}
 
@@ -393,7 +391,7 @@ static void solve(size_t depth) {
 		}
 
 		if (strcmp(map_string, maps[i]) == 0) {
-			if (map_depths[i] > depth) {
+			if (map_depths[i] < depth) {
 				break;
 			} else {
 				return; // Memoization, by returning if the map_string has been seen before
@@ -403,7 +401,7 @@ static void solve(size_t depth) {
 		i = chains[i];
 	}
 
-	if (i != UINT32_MAX && map_depths[i] > depth) { // If a less deep path to the same map was found
+	if (i != UINT32_MAX && map_depths[i] < depth) { // If a less deep path to the same map was found
 		map_depths[i] = depth;
 	} else {
 		// fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
@@ -467,10 +465,10 @@ int main(void) {
 	check_is_solved();
 
 	// See https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search
-	for (;;max_depth++) {
-		fprintf(stderr, "max_depth: %zu\n", max_depth);
+	for (size_t depth = 0; ; depth++) {
+		fprintf(stderr, "depth: %zu\n", depth);
 		reset();
-		solve(1);
+		solve(depth);
 	}
 
 	fprintf(stderr, "No solution was found :(\n");
