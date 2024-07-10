@@ -32,7 +32,6 @@ struct entry {
 	size_t player_y;
 	char *path;
 	size_t empty_storages;
-	size_t depth;
 };
 
 static enum tile map[MAX_HEIGHT][MAX_WIDTH];
@@ -95,16 +94,16 @@ static enum tile char_to_tile(char c) {
 	abort();
 }
 
-static void print_bfs_stats(size_t depth) {
+static void print_bfs_stats(void) {
 	printf("entries_seen: %zu\n", entries_seen);
 	printf("queue_start_index: %zu\n", queue_start_index);
 	printf("queue_end_index: %zu\n", queue_end_index);
 	// printf("queue_length: %zu\n", );
-	printf("branching factor: %.2f\n", pow(entries_seen, 1.0/depth)); // O(branching_factor ^ depth)
+	printf("branching factor: %.2f\n", pow(entries_seen, 1.0/path_length)); // O(branching_factor ^ depth)
 }
 
-static void print_map(size_t depth) {
-	print_bfs_stats(depth);
+static void print_map(void) {
+	print_bfs_stats();
 	printf("width: %zu\n", width);
 	printf("height: %zu\n", height);
 	printf("player_x: %zu\n", player_x);
@@ -112,7 +111,6 @@ static void print_map(size_t depth) {
 	printf("empty_storages: %zu\n", empty_storages);
 	printf("path_length: %zu\n", path_length);
 	printf("path: '%.*s'\n", (int)path_length, path);
-	printf("depth: %zu\n", depth);
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
 			printf("%c", x == player_x && y == player_y ? '@' : tile_to_char(map[y][x]));
@@ -122,15 +120,15 @@ static void print_map(size_t depth) {
 	printf("\n");
 }
 
-static void check_is_solved(size_t depth) {
+static void check_is_solved(void) {
 	if (empty_storages == 0) {
 		printf("Solved!\n");
-		print_map(depth);
+		print_map();
 		exit(EXIT_SUCCESS);
 	}
 }
 
-static void enqueue(size_t depth) {
+static void enqueue() {
 	struct entry e;
 
 	memcpy(e.map, map, sizeof(map));
@@ -138,9 +136,8 @@ static void enqueue(size_t depth) {
 	e.player_y = player_y;
 	path[path_length] = '\0';
 	e.path = strdup(path);
-	printf("Storing path '%s'\n", e.path);
+	// printf("Storing path '%s'\n", e.path);
 	e.empty_storages = empty_storages;
-	e.depth = depth;
 
 	queue[queue_end_index++] = e;
 	queue_end_index %= QUEUE_LENGTH;
@@ -151,12 +148,12 @@ static void enqueue(size_t depth) {
 	}
 }
 
-static void up(size_t depth) {
+static void up(void) {
 	if (map[player_y-1][player_x] == FLOOR || map[player_y-1][player_x] == STORAGE) {
 		path[path_length++] = 'u';
 		player_y--;
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_y++;
@@ -172,10 +169,10 @@ static void up(size_t depth) {
 		player_y--;
 		if (map[player_y-1][player_x] == STORED_BOX) {
 			empty_storages--;
-			check_is_solved(depth);
+			check_is_solved();
 		}
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_y++;
@@ -199,7 +196,7 @@ static void up(size_t depth) {
 			empty_storages--;
 		}
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_y++;
@@ -212,12 +209,12 @@ static void up(size_t depth) {
 	}
 }
 
-static void down(size_t depth) {
+static void down(void) {
 	if (map[player_y+1][player_x] == FLOOR || map[player_y+1][player_x] == STORAGE) {
 		path[path_length++] = 'd';
 		player_y++;
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_y--;
@@ -233,10 +230,10 @@ static void down(size_t depth) {
 		player_y++;
 		if (map[player_y+1][player_x] == STORED_BOX) {
 			empty_storages--;
-			check_is_solved(depth);
+			check_is_solved();
 		}
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_y--;
@@ -260,7 +257,7 @@ static void down(size_t depth) {
 			empty_storages--;
 		}
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_y--;
@@ -273,12 +270,12 @@ static void down(size_t depth) {
 	}
 }
 
-static void left(size_t depth) {
+static void left(void) {
 	if (map[player_y][player_x-1] == FLOOR || map[player_y][player_x-1] == STORAGE) {
 		path[path_length++] = 'l';
 		player_x--;
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_x++;
@@ -294,10 +291,10 @@ static void left(size_t depth) {
 		player_x--;
 		if (map[player_y][player_x-1] == STORED_BOX) {
 			empty_storages--;
-			check_is_solved(depth);
+			check_is_solved();
 		}
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_x++;
@@ -321,7 +318,7 @@ static void left(size_t depth) {
 			empty_storages--;
 		}
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_x++;
@@ -334,12 +331,12 @@ static void left(size_t depth) {
 	}
 }
 
-static void right(size_t depth) {
+static void right(void) {
 	if (map[player_y][player_x+1] == FLOOR || map[player_y][player_x+1] == STORAGE) {
 		path[path_length++] = 'r';
 		player_x++;
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_x--;
@@ -355,10 +352,10 @@ static void right(size_t depth) {
 		player_x++;
 		if (map[player_y][player_x+1] == STORED_BOX) {
 			empty_storages--;
-			check_is_solved(depth);
+			check_is_solved();
 		}
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_x--;
@@ -382,7 +379,7 @@ static void right(size_t depth) {
 			empty_storages--;
 		}
 
-		enqueue(depth+1);
+		enqueue();
 
 		path_length--;
 		player_x--;
@@ -418,7 +415,7 @@ static char *stringify_map(void) {
 	}
 	map_string[map_string_length] = '\0';
 
-	fprintf(stderr, "Stringified map:\n%s\n", map_string);
+	// fprintf(stderr, "Stringified map:\n%s\n", map_string);
 
 	return strdup(map_string);
 }
@@ -432,12 +429,11 @@ static void solve(void) {
 		player_x = e.player_x;
 		player_y = e.player_y;
 		char *map_string = stringify_map();
-		fprintf(stderr, "Dequeued map:\n%s", map_string);
+		// fprintf(stderr, "Dequeued map:\n%s", map_string);
 		path_length = strlen(e.path);
 		memcpy(path, e.path, path_length);
-		fprintf(stderr, "With path that is %zu steps long:\n'%.*s'\n\n", path_length, (int)path_length, path);
+		// fprintf(stderr, "With path that is %zu steps long:\n'%.*s'\n\n", path_length, (int)path_length, path);
 		empty_storages = e.empty_storages;
-		size_t depth = e.depth;
 
 		entries_seen++;
 
@@ -447,7 +443,7 @@ static void solve(void) {
 
 		while (1) {
 			if (i == UINT32_MAX) {
-				fprintf(stderr, "Memoizing map:\n%s\n", map_string);
+				// fprintf(stderr, "Memoizing map:\n%s\n", map_string);
 				maps[maps_size] = map_strings + map_strings_size;
 				memcpy(map_strings + map_strings_size, map_string, strlen(map_string)+1);
 				map_strings_size += strlen(map_string)+1;
@@ -460,17 +456,17 @@ static void solve(void) {
 			}
 
 			if (strcmp(map_string, maps[i]) == 0) {
-				printf("Already memoized path '%s'\n", path);
+				// printf("Already memoized path '%s'\n", path);
 				goto memoized; // Memoization, by stopping if the map_string has been seen before
 			}
 
 			i = chains[i];
 		}
 
-		up(depth);
-		down(depth);
-		left(depth);
-		right(depth);
+		up();
+		down();
+		left();
+		right();
 
 memoized:
 		free(map_string);
@@ -518,13 +514,13 @@ int main(void) {
 	}
 	free(line);
 
-	print_map(1);
-	check_is_solved(1);
+	print_map();
+	check_is_solved();
 
 	memset(buckets, UINT32_MAX, MAX_MAPS * sizeof(u32));
 	enqueue(1);
 	solve();
-	print_bfs_stats(1);
+	print_bfs_stats();
 
 	fprintf(stderr, "No solution was found :(\n");
 	exit(EXIT_FAILURE);
