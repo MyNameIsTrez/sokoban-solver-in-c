@@ -50,6 +50,8 @@ static size_t map_strings_size;
 static u32 buckets[MAX_MAPS];
 static u32 chains[MAX_MAPS];
 
+static size_t max_depth = 1;
+
 static char tile_to_char(enum tile t) {
 	switch (t) {
 		case FLOOR:
@@ -104,13 +106,13 @@ static void check_is_solved(void) {
 	}
 }
 
-static void solve(void);
+static void solve(size_t depth);
 
-static void up(void) {
+static void up(size_t depth) {
 	if (map[player_y-1][player_x] == FLOOR || map[player_y-1][player_x] == STORAGE) {
 		path[path_length++] = 'u';
 		player_y--;
-		solve();
+		solve(depth+1);
 		path_length--;
 		player_y++;
 	} else if (map[player_y-1][player_x] == BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
@@ -128,7 +130,7 @@ static void up(void) {
 			check_is_solved();
 		}
 
-		solve();
+		solve(depth+1);
 
 		path_length--;
 		player_y++;
@@ -152,7 +154,7 @@ static void up(void) {
 			empty_storages--;
 		}
 
-		solve();
+		solve(depth+1);
 
 		path_length--;
 		player_y++;
@@ -165,11 +167,11 @@ static void up(void) {
 	}
 }
 
-static void down(void) {
+static void down(size_t depth) {
 	if (map[player_y+1][player_x] == FLOOR || map[player_y+1][player_x] == STORAGE) {
 		path[path_length++] = 'd';
 		player_y++;
-		solve();
+		solve(depth+1);
 		path_length--;
 		player_y--;
 	} else if (map[player_y+1][player_x] == BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
@@ -187,7 +189,7 @@ static void down(void) {
 			check_is_solved();
 		}
 
-		solve();
+		solve(depth+1);
 
 		path_length--;
 		player_y--;
@@ -211,7 +213,7 @@ static void down(void) {
 			empty_storages--;
 		}
 
-		solve();
+		solve(depth+1);
 
 		path_length--;
 		player_y--;
@@ -224,11 +226,11 @@ static void down(void) {
 	}
 }
 
-static void left(void) {
+static void left(size_t depth) {
 	if (map[player_y][player_x-1] == FLOOR || map[player_y][player_x-1] == STORAGE) {
 		path[path_length++] = 'l';
 		player_x--;
-		solve();
+		solve(depth+1);
 		path_length--;
 		player_x++;
 	} else if (map[player_y][player_x-1] == BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
@@ -246,7 +248,7 @@ static void left(void) {
 			check_is_solved();
 		}
 
-		solve();
+		solve(depth+1);
 
 		path_length--;
 		player_x++;
@@ -270,7 +272,7 @@ static void left(void) {
 			empty_storages--;
 		}
 
-		solve();
+		solve(depth+1);
 
 		path_length--;
 		player_x++;
@@ -283,11 +285,11 @@ static void left(void) {
 	}
 }
 
-static void right(void) {
+static void right(size_t depth) {
 	if (map[player_y][player_x+1] == FLOOR || map[player_y][player_x+1] == STORAGE) {
 		path[path_length++] = 'r';
 		player_x++;
-		solve();
+		solve(depth+1);
 		path_length--;
 		player_x--;
 	} else if (map[player_y][player_x+1] == BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
@@ -305,7 +307,7 @@ static void right(void) {
 			check_is_solved();
 		}
 
-		solve();
+		solve(depth+1);
 
 		path_length--;
 		player_x--;
@@ -329,7 +331,7 @@ static void right(void) {
 			empty_storages--;
 		}
 
-		solve();
+		solve(depth+1);
 
 		path_length--;
 		player_x--;
@@ -363,51 +365,55 @@ static u32 elf_hash(const char *namearg) {
 	return h & 0x0fffffff;
 }
 
-static void solve(void) {
+static void solve(size_t depth) {
+	if (depth > max_depth) {
+		return;
+	}
+
 	stringify_map();
 
 	u32 bucket_index = elf_hash(map_string) % MAX_BUCKETS;
 
-	// fprintf(stderr, "bucket_index: %u\n", bucket_index);
 	u32 i = buckets[bucket_index];
-	// fprintf(stderr, "i == %u\n", i);
 
 	while (1) {
 		if (i == UINT32_MAX) {
 			break;
 		}
 
-		// fprintf(stderr, "Comparing map:\n%.*s\n", (int)map_string_length, map_string);
-		// fprintf(stderr, "with memoized map:\n%s\n", maps[i]);
-		// abort();
 		if (strcmp(map_string, maps[i]) == 0) {
-			// abort();
 			return; // Memoization, by returning if the map_string has been seen before
 		}
 
 		i = chains[i];
 	}
 
-	fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
+	// fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
 	maps[maps_size] = map_strings + map_strings_size;
 	memcpy(map_strings + map_strings_size, map_string, map_string_length+1);
 	map_strings_size += map_string_length+1;
 
 	// If this map hasn't been seen before, memoize it
 	chains[maps_size] = buckets[bucket_index];
-	// fprintf(stderr, "buckets[%u] = %zu\n", bucket_index, maps_size);
 	buckets[bucket_index] = maps_size++;
 
-	up();
-	down();
-	left();
-	right();
+	up(depth);
+	down(depth);
+	left(depth);
+	right(depth);
+}
+
+static void reset(void) {
+	maps_size = 0;
+	map_string_length = 0;
+	map_strings_size = 0;
+	memset(buckets, UINT32_MAX, MAX_BUCKETS * sizeof(u32));
 }
 
 int main(void) {
 	size_t n = 1;
 	char *line = malloc(n);
-	getline(&line, &n, stdin); // The first line is always a comment
+	if (getline(&line, &n, stdin) == -1) {} // The first line is always a comment
 	while (getline(&line, &n, stdin) > 0) {
 		size_t len = 0;
 		while (line[len] != '\n') {
@@ -431,8 +437,12 @@ int main(void) {
 
 	print_map();
 
-	memset(buckets, UINT32_MAX, MAX_BUCKETS * sizeof(u32));
-	solve();
+	// See https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search
+	for (;;max_depth++) {
+		fprintf(stderr, "max_depth: %zu\n", max_depth);
+		reset();
+		solve(1);
+	}
 
 	fprintf(stderr, "No solution was found :(\n");
 	exit(EXIT_FAILURE);
