@@ -94,6 +94,7 @@ static void print_map(void) {
 	printf("player_x: %zu\n", player_x);
 	printf("player_y: %zu\n", player_y);
 	printf("empty_storages: %zu\n", empty_storages);
+	printf("path_length: %zu\n", path_length);
 	printf("path: '%.*s'\n", (int)path_length, path);
 	printf("current_solve_calls: %zu\n", current_solve_calls);
 	printf("total_solve_calls: %zu\n", total_solve_calls);
