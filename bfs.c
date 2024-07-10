@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -448,7 +449,7 @@ static void solve(void) {
 
 		u32 i = buckets[bucket_index];
 
-		while (1) {
+		while (true) {
 			if (i == UINT32_MAX) {
 				// fprintf(stderr, "Memoizing map:\n%s\n", map_string);
 				maps[maps_size] = map_strings + map_strings_size;

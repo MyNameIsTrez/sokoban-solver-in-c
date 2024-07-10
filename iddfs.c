@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,8 +7,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_HEIGHT 420
-#define MAX_WIDTH 420
+#define MAX_HEIGHT 16
+#define MAX_WIDTH 16
 
 #define MAX_PATH_LENGTH 420420
 #define MAX_MAPS 42420420
@@ -403,7 +404,7 @@ static void solve(size_t depth) {
 
 	u32 i = buckets[bucket_index];
 
-	while (1) {
+	while (true) {
 		if (i == UINT32_MAX) {
 			// fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
 			maps[maps_size] = map_strings + map_strings_size;
