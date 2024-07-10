@@ -2,7 +2,7 @@
 
 [Sokoban](https://en.wikipedia.org/wiki/Sokoban) is a game in which the player pushes boxes around in a warehouse, trying to get them to storage locations.
 
-Writing a solver for it is similar to writing a chess engine, but simpler. Just like with chess, the branching factor (the number of possible moves on each turn) of a Sokoban level can get so ridiculously huge, that there are a practically infinite number of possible moves for complex Sokoban levels.
+Writing a solver for it is similar to writing a chess engine, but simpler. Just like with chess, the branching factor (the number of possible moves on each turn) of a complex Sokoban level can be ridiculously huge. The number of a chess and Sokoban board is `O(b^d)`, where `b` is the branching factor, and `d` is the depth of the shallowest solution. In other words, exponential growth.
 
 `bfs.c` ([breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search)) is best when the branching factor is near 1. The downside is that it runs out of memory in big maps.
 
