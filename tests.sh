@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# gcc main.c -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -Ofast -march=native
-gcc main.c -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -fsanitize=address,undefined
+gcc main.c -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -Ofast -march=native
+# gcc main.c -Wall -Wextra -Werror -Wpedantic -Wshadow -Wfatal-errors -g -fsanitize=address,undefined
 
 if [[ $? -ne 0 ]]
 then

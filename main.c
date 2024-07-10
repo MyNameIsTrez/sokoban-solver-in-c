@@ -39,6 +39,7 @@ static char path[MAX_PATH_LENGTH];
 static size_t path_length;
 
 static char *maps[MAX_MAPS];
+static size_t map_depths[MAX_MAPS];
 static size_t maps_size;
 
 static char map_string[MAX_MAP_STRING_LENGTH];
@@ -382,20 +383,29 @@ static void solve(size_t depth) {
 		}
 
 		if (strcmp(map_string, maps[i]) == 0) {
-			return; // Memoization, by returning if the map_string has been seen before
+			if (map_depths[i] > depth) {
+				break;
+			} else {
+				return; // Memoization, by returning if the map_string has been seen before
+			}
 		}
 
 		i = chains[i];
 	}
 
-	// fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
-	maps[maps_size] = map_strings + map_strings_size;
-	memcpy(map_strings + map_strings_size, map_string, map_string_length+1);
-	map_strings_size += map_string_length+1;
+	if (i != UINT32_MAX && map_depths[i] > depth) { // If a less deep path to the same map was found
+		map_depths[i] = depth;
+	} else {
+		// fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
+		maps[maps_size] = map_strings + map_strings_size;
+		map_depths[maps_size] = depth;
+		memcpy(map_strings + map_strings_size, map_string, map_string_length+1);
+		map_strings_size += map_string_length+1;
 
-	// If this map hasn't been seen before, memoize it
-	chains[maps_size] = buckets[bucket_index];
-	buckets[bucket_index] = maps_size++;
+		// If this map hasn't been seen before, memoize it
+		chains[maps_size] = buckets[bucket_index];
+		buckets[bucket_index] = maps_size++;
+	}
 
 	up(depth);
 	down(depth);
