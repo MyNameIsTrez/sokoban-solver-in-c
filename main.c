@@ -121,7 +121,7 @@ static void up(size_t depth) {
 			return;
 		}
 
-		path[path_length++] = 'u';
+		path[path_length++] = 'U';
 		map[player_y-1][player_x] = FLOOR;
 		map[player_y-2][player_x] = map[player_y-2][player_x] == FLOOR ? BOX : STORED_BOX;
 		player_y--;
@@ -145,7 +145,7 @@ static void up(size_t depth) {
 			return;
 		}
 
-		path[path_length++] = 'u';
+		path[path_length++] = 'U';
 		map[player_y-1][player_x] = STORAGE;
 		map[player_y-2][player_x] = map[player_y-2][player_x] == FLOOR ? BOX : STORED_BOX;
 		player_y--;
@@ -180,7 +180,7 @@ static void down(size_t depth) {
 			return;
 		}
 
-		path[path_length++] = 'd';
+		path[path_length++] = 'D';
 		map[player_y+1][player_x] = FLOOR;
 		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
 		player_y++;
@@ -204,7 +204,7 @@ static void down(size_t depth) {
 			return;
 		}
 
-		path[path_length++] = 'd';
+		path[path_length++] = 'D';
 		map[player_y+1][player_x] = STORAGE;
 		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
 		player_y++;
@@ -239,7 +239,7 @@ static void left(size_t depth) {
 			return;
 		}
 
-		path[path_length++] = 'l';
+		path[path_length++] = 'L';
 		map[player_y][player_x-1] = FLOOR;
 		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
 		player_x--;
@@ -263,7 +263,7 @@ static void left(size_t depth) {
 			return;
 		}
 
-		path[path_length++] = 'l';
+		path[path_length++] = 'L';
 		map[player_y][player_x-1] = STORAGE;
 		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
 		player_x--;
@@ -298,7 +298,7 @@ static void right(size_t depth) {
 			return;
 		}
 
-		path[path_length++] = 'r';
+		path[path_length++] = 'R';
 		map[player_y][player_x+1] = FLOOR;
 		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
 		player_x++;
@@ -322,7 +322,7 @@ static void right(size_t depth) {
 			return;
 		}
 
-		path[path_length++] = 'r';
+		path[path_length++] = 'R';
 		map[player_y][player_x+1] = STORAGE;
 		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
 		player_x++;
