@@ -471,6 +471,7 @@ int main(void) {
 	check_is_solved();
 
 	// See https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search
+	// max_depth = 122; {
 	for (;; max_depth++) {
 		fprintf(stderr, "max_depth: %zu\n", max_depth);
 		reset();
