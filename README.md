@@ -10,7 +10,36 @@ Writing a solver for Sokoban is similar to writing a chess engine. Just like wit
 
 `iddfs.c` ([iterative deepening depth-first search](https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search)) is best when the branching factor is quite a bit higher than 1. It doesn't run out of memory in big maps.
 
-`area.c` is based on `iddfs.c`, but the major difference is that it doesn't make the player walk around one step at a time. Instead, it tracks which floor tiles are reachable by the player, so that it knows which boxes the player is able to push, if the player were to walk up to them. This way, the solver can just push reachable boxes directly.
+`area.c` is based on `iddfs.c`, but the major difference is that it doesn't make the player walk around one step at a time. Instead, it tracks which floor tiles are reachable by the player, so that it knows which boxes the player is able to push, if the player were to walk up to them. This way, the solver can just push reachable boxes directly. The implementation floodfills every time a box is pushed, where any time a new box is now exposed, it will recursively also get pushed.
+
+## Visualizig reachable areas
+
+The player is only able to move to the right here:
+
+```
+######
+#.$ ##
+##@$.#
+######
+```
+
+After which the player's reachable area grows from 1 to 3 tiles:
+
+```
+######
+#.$ ##
+## @*#
+######
+```
+
+The player is then able to push the box on the top to the left into the remaining storage location. The solution ends up with 4 reachable tiles:
+
+```
+######
+#*@ ##
+##  *#
+######
+```
 
 ## Running
 
@@ -27,3 +56,4 @@ Writing a solver for Sokoban is similar to writing a chess engine. Just like wit
 - Allow the user to turn on the asan build by passing an optional command argument
 - Try using a swap-remove array in `bfs.c` instead of using `strdup()` + `free()`, by storing map strings and paths in a static array
 - Try turning `map` into a flattened 2D array, getting the index with `x + y * width`
+- Hashing could be omitted entirely in `area.c` if there is no way for an infinite loop to appear
