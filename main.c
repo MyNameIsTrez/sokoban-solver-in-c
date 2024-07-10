@@ -12,7 +12,6 @@
 #define MAX_MAPS 42420420
 #define MAX_MAP_STRING_LENGTH 420420
 #define MAX_MAP_STRINGS_CHARS 420420420
-#define MAX_BUCKETS 420420
 
 typedef uint32_t u32;
 typedef int64_t i64;
@@ -384,7 +383,7 @@ static void solve(size_t depth) {
 
 	stringify_map();
 
-	u32 bucket_index = elf_hash(map_string) % MAX_BUCKETS;
+	u32 bucket_index = elf_hash(map_string) % MAX_MAPS;
 
 	u32 i = buckets[bucket_index];
 
@@ -429,7 +428,7 @@ static void reset(void) {
 	map_string_length = 0;
 	map_strings_size = 0;
 	current_solve_calls = 0;
-	memset(buckets, UINT32_MAX, MAX_BUCKETS * sizeof(u32));
+	memset(buckets, UINT32_MAX, MAX_MAPS * sizeof(u32));
 }
 
 int main(void) {
