@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,8 +7,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_HEIGHT 420
-#define MAX_WIDTH 420
+#define MAX_HEIGHT 16
+#define MAX_WIDTH 16
 
 #define MAX_PATH_LENGTH 420420
 #define MAX_MAPS 42420420
@@ -27,11 +28,16 @@ enum tile {
 
 static enum tile map[MAX_HEIGHT][MAX_WIDTH];
 
+static bool reachable[MAX_HEIGHT][MAX_WIDTH];
+
+// Reachable boxes that can be pushed up/down/left/right by the player
+static bool pushable_up[MAX_HEIGHT][MAX_WIDTH];
+static bool pushable_down[MAX_HEIGHT][MAX_WIDTH];
+static bool pushable_left[MAX_HEIGHT][MAX_WIDTH];
+static bool pushable_right[MAX_HEIGHT][MAX_WIDTH];
+
 static size_t width = 0;
 static size_t height = 0;
-
-static size_t player_x;
-static size_t player_y;
 
 static i64 empty_storages = 0;
 
@@ -88,7 +94,7 @@ static enum tile char_to_tile(char c) {
 	abort();
 }
 
-static void print_iddfs_stats(void) {
+static void print_area_stats(void) {
 	printf("current_solve_calls: %zu\n", current_solve_calls);
 	printf("total_solve_calls: %zu\n", total_solve_calls);
 	printf("branching factor: %.2f\n", pow(current_solve_calls, 1.0/max_depth)); // O(branching_factor ^ depth)
@@ -96,18 +102,16 @@ static void print_iddfs_stats(void) {
 }
 
 static void print_map(void) {
-	print_iddfs_stats();
+	print_area_stats();
 	printf("width: %zu\n", width);
 	printf("height: %zu\n", height);
-	printf("player_x: %zu\n", player_x);
-	printf("player_y: %zu\n", player_y);
 	printf("empty_storages: %zu\n", empty_storages);
 	printf("path_length: %zu\n", path_length);
 	printf("path: '%.*s'\n", (int)path_length, path);
 	printf("depth: %zu\n", max_depth);
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
-			printf("%c", x == player_x && y == player_y ? '@' : tile_to_char(map[y][x]));
+			printf("%c", tile_to_char(map[y][x]));
 		}
 		printf("\n");
 	}
@@ -124,26 +128,18 @@ static void check_is_solved(void) {
 
 static void solve(size_t depth);
 
-static void up(size_t depth) {
-	if (map[player_y-1][player_x] == FLOOR || map[player_y-1][player_x] == STORAGE) {
-		path[path_length++] = 'u';
-		player_y--;
-
-		solve(depth+1);
-
-		path_length--;
-		player_y++;
-	} else if (map[player_y-1][player_x] == BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
+static void up(size_t x, size_t y, size_t depth) {
+	if (map[y-1][x] == BOX && (map[y-2][x] == FLOOR || map[y-2][x] == STORAGE)) {
 		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
-		if (map[player_y-2][player_x] == FLOOR && map[player_y-3][player_x] == WALL && (map[player_y-2][player_x-1] == WALL || map[player_y-2][player_x+1] == WALL)) {
+		if (map[y-2][x] == FLOOR && map[y-3][x] == WALL && (map[y-2][x-1] == WALL || map[y-2][x+1] == WALL)) {
 			return;
 		}
 
 		path[path_length++] = 'U';
-		map[player_y-1][player_x] = FLOOR;
-		map[player_y-2][player_x] = map[player_y-2][player_x] == FLOOR ? BOX : STORED_BOX;
-		player_y--;
-		if (map[player_y-1][player_x] == STORED_BOX) {
+		map[y-1][x] = FLOOR;
+		map[y-2][x] = map[y-2][x] == FLOOR ? BOX : STORED_BOX;
+		y--;
+		if (map[y-1][x] == STORED_BOX) {
 			empty_storages--;
 			check_is_solved();
 		}
@@ -151,228 +147,204 @@ static void up(size_t depth) {
 		solve(depth+1);
 
 		path_length--;
-		player_y++;
-		if (map[player_y-2][player_x] == STORED_BOX) {
+		y++;
+		if (map[y-2][x] == STORED_BOX) {
 			empty_storages++;
 		}
-		map[player_y-2][player_x] = map[player_y-2][player_x] == BOX ? FLOOR : STORAGE;
-		map[player_y-1][player_x] = BOX;
-	} else if (map[player_y-1][player_x] == STORED_BOX && (map[player_y-2][player_x] == FLOOR || map[player_y-2][player_x] == STORAGE)) {
+		map[y-2][x] = map[y-2][x] == BOX ? FLOOR : STORAGE;
+		map[y-1][x] = BOX;
+	} else if (map[y-1][x] == STORED_BOX && (map[y-2][x] == FLOOR || map[y-2][x] == STORAGE)) {
 		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
-		if (map[player_y-2][player_x] == FLOOR && map[player_y-3][player_x] == WALL && (map[player_y-2][player_x-1] == WALL || map[player_y-2][player_x+1] == WALL)) {
+		if (map[y-2][x] == FLOOR && map[y-3][x] == WALL && (map[y-2][x-1] == WALL || map[y-2][x+1] == WALL)) {
 			return;
 		}
 
 		path[path_length++] = 'U';
-		map[player_y-1][player_x] = STORAGE;
-		map[player_y-2][player_x] = map[player_y-2][player_x] == FLOOR ? BOX : STORED_BOX;
-		player_y--;
+		map[y-1][x] = STORAGE;
+		map[y-2][x] = map[y-2][x] == FLOOR ? BOX : STORED_BOX;
+		y--;
 		empty_storages++;
-		if (map[player_y-1][player_x] == STORED_BOX) {
+		if (map[y-1][x] == STORED_BOX) {
 			empty_storages--;
 		}
 
 		solve(depth+1);
 
 		path_length--;
-		player_y++;
+		y++;
 		empty_storages--;
-		if (map[player_y-2][player_x] == STORED_BOX) {
+		if (map[y-2][x] == STORED_BOX) {
 			empty_storages++;
 		}
-		map[player_y-2][player_x] = map[player_y-2][player_x] == BOX ? FLOOR : STORAGE;
-		map[player_y-1][player_x] = STORED_BOX;
+		map[y-2][x] = map[y-2][x] == BOX ? FLOOR : STORAGE;
+		map[y-1][x] = STORED_BOX;
 	}
 }
 
-static void down(size_t depth) {
-	if (map[player_y+1][player_x] == FLOOR || map[player_y+1][player_x] == STORAGE) {
-		path[path_length++] = 'd';
-		player_y++;
+// static void down(size_t depth) {
+// 	if (map[player_y+1][player_x] == BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
+// 		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+// 		if (map[player_y+2][player_x] == FLOOR && map[player_y+3][player_x] == WALL && (map[player_y+2][player_x-1] == WALL || map[player_y+2][player_x+1] == WALL)) {
+// 			return;
+// 		}
 
-		solve(depth+1);
+// 		path[path_length++] = 'D';
+// 		map[player_y+1][player_x] = FLOOR;
+// 		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
+// 		player_y++;
+// 		if (map[player_y+1][player_x] == STORED_BOX) {
+// 			empty_storages--;
+// 			check_is_solved();
+// 		}
 
-		path_length--;
-		player_y--;
-	} else if (map[player_y+1][player_x] == BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
-		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
-		if (map[player_y+2][player_x] == FLOOR && map[player_y+3][player_x] == WALL && (map[player_y+2][player_x-1] == WALL || map[player_y+2][player_x+1] == WALL)) {
-			return;
-		}
+// 		solve(depth+1);
 
-		path[path_length++] = 'D';
-		map[player_y+1][player_x] = FLOOR;
-		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
-		player_y++;
-		if (map[player_y+1][player_x] == STORED_BOX) {
-			empty_storages--;
-			check_is_solved();
-		}
+// 		path_length--;
+// 		player_y--;
+// 		if (map[player_y+2][player_x] == STORED_BOX) {
+// 			empty_storages++;
+// 		}
+// 		map[player_y+2][player_x] = map[player_y+2][player_x] == BOX ? FLOOR : STORAGE;
+// 		map[player_y+1][player_x] = BOX;
+// 	} else if (map[player_y+1][player_x] == STORED_BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
+// 		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+// 		if (map[player_y+2][player_x] == FLOOR && map[player_y+3][player_x] == WALL && (map[player_y+2][player_x-1] == WALL || map[player_y+2][player_x+1] == WALL)) {
+// 			return;
+// 		}
 
-		solve(depth+1);
+// 		path[path_length++] = 'D';
+// 		map[player_y+1][player_x] = STORAGE;
+// 		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
+// 		player_y++;
+// 		empty_storages++;
+// 		if (map[player_y+1][player_x] == STORED_BOX) {
+// 			empty_storages--;
+// 		}
 
-		path_length--;
-		player_y--;
-		if (map[player_y+2][player_x] == STORED_BOX) {
-			empty_storages++;
-		}
-		map[player_y+2][player_x] = map[player_y+2][player_x] == BOX ? FLOOR : STORAGE;
-		map[player_y+1][player_x] = BOX;
-	} else if (map[player_y+1][player_x] == STORED_BOX && (map[player_y+2][player_x] == FLOOR || map[player_y+2][player_x] == STORAGE)) {
-		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
-		if (map[player_y+2][player_x] == FLOOR && map[player_y+3][player_x] == WALL && (map[player_y+2][player_x-1] == WALL || map[player_y+2][player_x+1] == WALL)) {
-			return;
-		}
+// 		solve(depth+1);
 
-		path[path_length++] = 'D';
-		map[player_y+1][player_x] = STORAGE;
-		map[player_y+2][player_x] = map[player_y+2][player_x] == FLOOR ? BOX : STORED_BOX;
-		player_y++;
-		empty_storages++;
-		if (map[player_y+1][player_x] == STORED_BOX) {
-			empty_storages--;
-		}
+// 		path_length--;
+// 		player_y--;
+// 		empty_storages--;
+// 		if (map[player_y+2][player_x] == STORED_BOX) {
+// 			empty_storages++;
+// 		}
+// 		map[player_y+2][player_x] = map[player_y+2][player_x] == BOX ? FLOOR : STORAGE;
+// 		map[player_y+1][player_x] = STORED_BOX;
+// 	}
+// }
 
-		solve(depth+1);
+// static void left(size_t depth) {
+// 	if (map[player_y][player_x-1] == BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
+// 		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+// 		if (map[player_y][player_x-2] == FLOOR && map[player_y][player_x-3] == WALL && (map[player_y-1][player_x-2] == WALL || map[player_y+1][player_x-2] == WALL)) {
+// 			return;
+// 		}
 
-		path_length--;
-		player_y--;
-		empty_storages--;
-		if (map[player_y+2][player_x] == STORED_BOX) {
-			empty_storages++;
-		}
-		map[player_y+2][player_x] = map[player_y+2][player_x] == BOX ? FLOOR : STORAGE;
-		map[player_y+1][player_x] = STORED_BOX;
-	}
-}
+// 		path[path_length++] = 'L';
+// 		map[player_y][player_x-1] = FLOOR;
+// 		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
+// 		player_x--;
+// 		if (map[player_y][player_x-1] == STORED_BOX) {
+// 			empty_storages--;
+// 			check_is_solved();
+// 		}
 
-static void left(size_t depth) {
-	if (map[player_y][player_x-1] == FLOOR || map[player_y][player_x-1] == STORAGE) {
-		path[path_length++] = 'l';
-		player_x--;
+// 		solve(depth+1);
 
-		solve(depth+1);
+// 		path_length--;
+// 		player_x++;
+// 		if (map[player_y][player_x-2] == STORED_BOX) {
+// 			empty_storages++;
+// 		}
+// 		map[player_y][player_x-2] = map[player_y][player_x-2] == BOX ? FLOOR : STORAGE;
+// 		map[player_y][player_x-1] = BOX;
+// 	} else if (map[player_y][player_x-1] == STORED_BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
+// 		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+// 		if (map[player_y][player_x-2] == FLOOR && map[player_y][player_x-3] == WALL && (map[player_y-1][player_x-2] == WALL || map[player_y+1][player_x-2] == WALL)) {
+// 			return;
+// 		}
 
-		path_length--;
-		player_x++;
-	} else if (map[player_y][player_x-1] == BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
-		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
-		if (map[player_y][player_x-2] == FLOOR && map[player_y][player_x-3] == WALL && (map[player_y-1][player_x-2] == WALL || map[player_y+1][player_x-2] == WALL)) {
-			return;
-		}
+// 		path[path_length++] = 'L';
+// 		map[player_y][player_x-1] = STORAGE;
+// 		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
+// 		player_x--;
+// 		empty_storages++;
+// 		if (map[player_y][player_x-1] == STORED_BOX) {
+// 			empty_storages--;
+// 		}
 
-		path[path_length++] = 'L';
-		map[player_y][player_x-1] = FLOOR;
-		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
-		player_x--;
-		if (map[player_y][player_x-1] == STORED_BOX) {
-			empty_storages--;
-			check_is_solved();
-		}
+// 		solve(depth+1);
 
-		solve(depth+1);
+// 		path_length--;
+// 		player_x++;
+// 		empty_storages--;
+// 		if (map[player_y][player_x-2] == STORED_BOX) {
+// 			empty_storages++;
+// 		}
+// 		map[player_y][player_x-2] = map[player_y][player_x-2] == BOX ? FLOOR : STORAGE;
+// 		map[player_y][player_x-1] = STORED_BOX;
+// 	}
+// }
 
-		path_length--;
-		player_x++;
-		if (map[player_y][player_x-2] == STORED_BOX) {
-			empty_storages++;
-		}
-		map[player_y][player_x-2] = map[player_y][player_x-2] == BOX ? FLOOR : STORAGE;
-		map[player_y][player_x-1] = BOX;
-	} else if (map[player_y][player_x-1] == STORED_BOX && (map[player_y][player_x-2] == FLOOR || map[player_y][player_x-2] == STORAGE)) {
-		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
-		if (map[player_y][player_x-2] == FLOOR && map[player_y][player_x-3] == WALL && (map[player_y-1][player_x-2] == WALL || map[player_y+1][player_x-2] == WALL)) {
-			return;
-		}
+// static void right(size_t depth) {
+// 	if (map[player_y][player_x+1] == BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
+// 		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+// 		if (map[player_y][player_x+2] == FLOOR && map[player_y][player_x+3] == WALL && (map[player_y-1][player_x+2] == WALL || map[player_y+1][player_x+2] == WALL)) {
+// 			return;
+// 		}
 
-		path[path_length++] = 'L';
-		map[player_y][player_x-1] = STORAGE;
-		map[player_y][player_x-2] = map[player_y][player_x-2] == FLOOR ? BOX : STORED_BOX;
-		player_x--;
-		empty_storages++;
-		if (map[player_y][player_x-1] == STORED_BOX) {
-			empty_storages--;
-		}
+// 		path[path_length++] = 'R';
+// 		map[player_y][player_x+1] = FLOOR;
+// 		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
+// 		player_x++;
+// 		if (map[player_y][player_x+1] == STORED_BOX) {
+// 			empty_storages--;
+// 			check_is_solved();
+// 		}
 
-		solve(depth+1);
+// 		solve(depth+1);
 
-		path_length--;
-		player_x++;
-		empty_storages--;
-		if (map[player_y][player_x-2] == STORED_BOX) {
-			empty_storages++;
-		}
-		map[player_y][player_x-2] = map[player_y][player_x-2] == BOX ? FLOOR : STORAGE;
-		map[player_y][player_x-1] = STORED_BOX;
-	}
-}
+// 		path_length--;
+// 		player_x--;
+// 		if (map[player_y][player_x+2] == STORED_BOX) {
+// 			empty_storages++;
+// 		}
+// 		map[player_y][player_x+2] = map[player_y][player_x+2] == BOX ? FLOOR : STORAGE;
+// 		map[player_y][player_x+1] = BOX;
+// 	} else if (map[player_y][player_x+1] == STORED_BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
+// 		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
+// 		if (map[player_y][player_x+2] == FLOOR && map[player_y][player_x+3] == WALL && (map[player_y-1][player_x+2] == WALL || map[player_y+1][player_x+2] == WALL)) {
+// 			return;
+// 		}
 
-static void right(size_t depth) {
-	if (map[player_y][player_x+1] == FLOOR || map[player_y][player_x+1] == STORAGE) {
-		path[path_length++] = 'r';
-		player_x++;
+// 		path[path_length++] = 'R';
+// 		map[player_y][player_x+1] = STORAGE;
+// 		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
+// 		player_x++;
+// 		empty_storages++;
+// 		if (map[player_y][player_x+1] == STORED_BOX) {
+// 			empty_storages--;
+// 		}
 
-		solve(depth+1);
+// 		solve(depth+1);
 
-		path_length--;
-		player_x--;
-	} else if (map[player_y][player_x+1] == BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
-		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
-		if (map[player_y][player_x+2] == FLOOR && map[player_y][player_x+3] == WALL && (map[player_y-1][player_x+2] == WALL || map[player_y+1][player_x+2] == WALL)) {
-			return;
-		}
-
-		path[path_length++] = 'R';
-		map[player_y][player_x+1] = FLOOR;
-		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
-		player_x++;
-		if (map[player_y][player_x+1] == STORED_BOX) {
-			empty_storages--;
-			check_is_solved();
-		}
-
-		solve(depth+1);
-
-		path_length--;
-		player_x--;
-		if (map[player_y][player_x+2] == STORED_BOX) {
-			empty_storages++;
-		}
-		map[player_y][player_x+2] = map[player_y][player_x+2] == BOX ? FLOOR : STORAGE;
-		map[player_y][player_x+1] = BOX;
-	} else if (map[player_y][player_x+1] == STORED_BOX && (map[player_y][player_x+2] == FLOOR || map[player_y][player_x+2] == STORAGE)) {
-		// If the box would get stuck in a wall corner, without being put in storage, the move is invalid
-		if (map[player_y][player_x+2] == FLOOR && map[player_y][player_x+3] == WALL && (map[player_y-1][player_x+2] == WALL || map[player_y+1][player_x+2] == WALL)) {
-			return;
-		}
-
-		path[path_length++] = 'R';
-		map[player_y][player_x+1] = STORAGE;
-		map[player_y][player_x+2] = map[player_y][player_x+2] == FLOOR ? BOX : STORED_BOX;
-		player_x++;
-		empty_storages++;
-		if (map[player_y][player_x+1] == STORED_BOX) {
-			empty_storages--;
-		}
-
-		solve(depth+1);
-
-		path_length--;
-		player_x--;
-		empty_storages--;
-		if (map[player_y][player_x+2] == STORED_BOX) {
-			empty_storages++;
-		}
-		map[player_y][player_x+2] = map[player_y][player_x+2] == BOX ? FLOOR : STORAGE;
-		map[player_y][player_x+1] = STORED_BOX;
-	}
-}
+// 		path_length--;
+// 		player_x--;
+// 		empty_storages--;
+// 		if (map[player_y][player_x+2] == STORED_BOX) {
+// 			empty_storages++;
+// 		}
+// 		map[player_y][player_x+2] = map[player_y][player_x+2] == BOX ? FLOOR : STORAGE;
+// 		map[player_y][player_x+1] = STORED_BOX;
+// 	}
+// }
 
 static void stringify_map(void) {
 	map_string_length = 0;
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
-			map_string[map_string_length++] = x == player_x && y == player_y ? '@' : tile_to_char(map[y][x]);
+			map_string[map_string_length++] = tile_to_char(map[y][x]);
 		}
 		map_string[map_string_length++] = '\n';
 	}
@@ -403,7 +375,7 @@ static void solve(size_t depth) {
 
 	u32 i = buckets[bucket_index];
 
-	while (1) {
+	while (true) {
 		if (i == UINT32_MAX) {
 			// fprintf(stderr, "Memoizing map:\n%.*s\n", (int)map_string_length, map_string);
 			maps[maps_size] = map_strings + map_strings_size;
@@ -430,21 +402,59 @@ static void solve(size_t depth) {
 		i = chains[i];
 	}
 
-	up(depth);
-	down(depth);
-	left(depth);
-	right(depth);
+	up(?, ?, depth);
+	// down(depth);
+	// left(depth);
+	// right(depth);
 }
 
-static void reset(void) {
+// static void print_reachable(void) {
+// 	printf("Reachable:\n");
+// 	for (size_t y = 0; y < height; y++) {
+// 		for (size_t x = 0; x < width; x++) {
+// 			printf("%d", reachable[y][x]);
+// 		}
+// 		printf("\n");
+// 	}
+// }
+
+static void flood_reachable(size_t x, size_t y, size_t depth) {
+	reachable[y][x] = true;
+
+	solve();
+
+	if (y > 0        && !reachable[y-1][x] && (map[y-1][x] == FLOOR || map[y-1][x] == STORAGE)) { flood_reachable(x, y-1, depth); }
+	// if (y < height-1 && !reachable[y+1][x] && (map[y+1][x] == FLOOR || map[y+1][x] == STORAGE)) { flood_reachable(x, y+1, depth); }
+	// if (x > 0        && !reachable[y][x-1] && (map[y][x-1] == FLOOR || map[y][x-1] == STORAGE)) { flood_reachable(x-1, y, depth); }
+	// if (x < width-1  && !reachable[y][x+1] && (map[y][x+1] == FLOOR || map[y][x+1] == STORAGE)) { flood_reachable(x+1, y, depth); }
+}
+
+// static void flood_unreachable(size_t x, size_t y) {
+// 	reachable[y][x] = false;
+
+// 	if (y > 0        && reachable[y-1][x] && (map[y-1][x] == FLOOR || map[y-1][x] == STORAGE)) { flood_unreachable(x, y-1); }
+// 	if (y < height-1 && reachable[y+1][x] && (map[y+1][x] == FLOOR || map[y+1][x] == STORAGE)) { flood_unreachable(x, y+1); }
+// 	if (x > 0        && reachable[y][x-1] && (map[y][x-1] == FLOOR || map[y][x-1] == STORAGE)) { flood_unreachable(x-1, y); }
+// 	if (x < width-1  && reachable[y][x+1] && (map[y][x+1] == FLOOR || map[y][x+1] == STORAGE)) { flood_unreachable(x+1, y); }
+// }
+
+static void reset(size_t player_x, size_t player_y) {
 	maps_size = 0;
 	map_string_length = 0;
 	map_strings_size = 0;
 	current_solve_calls = 0;
 	memset(buckets, UINT32_MAX, MAX_MAPS * sizeof(u32));
+	memset(reachable, false, MAX_WIDTH * MAX_HEIGHT);
+	memset(pushable_up, false, MAX_WIDTH * MAX_HEIGHT);
+	memset(pushable_down, false, MAX_WIDTH * MAX_HEIGHT);
+	memset(pushable_left, false, MAX_WIDTH * MAX_HEIGHT);
+	memset(pushable_right, false, MAX_WIDTH * MAX_HEIGHT);
 }
 
 int main(void) {
+	size_t player_x;
+	size_t player_y;
+
 	size_t n = 1;
 	char *line = malloc(n);
 	while (getline(&line, &n, stdin) > 0) {
@@ -475,6 +485,8 @@ int main(void) {
 		height++;
 	}
 	free(line);
+	printf("player_x: %zu\n", player_x);
+	printf("player_y: %zu\n", player_y);
 
 	print_map();
 	check_is_solved();
@@ -483,9 +495,11 @@ int main(void) {
 	// max_depth = 122; {
 	for (;; max_depth++) {
 		fprintf(stderr, "max_depth: %zu\n", max_depth);
-		reset();
-		solve(1);
-		print_iddfs_stats();
+		reset(player_x, player_y);
+		// solve(1);
+		flood_reachable(player_x, player_y, 1);
+		// print_reachable();
+		print_area_stats();
 	}
 
 	fprintf(stderr, "No solution was found :(\n");
