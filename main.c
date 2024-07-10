@@ -88,7 +88,15 @@ static enum tile char_to_tile(char c) {
 	abort();
 }
 
+static void print_iddfs_stats(void) {
+	printf("current_solve_calls: %zu\n", current_solve_calls);
+	printf("total_solve_calls: %zu\n", total_solve_calls);
+	printf("branching factor: %.2f\n", pow((double)current_solve_calls, 1.0/max_depth)); // O(branching_factor ^ depth)
+	printf("'wasted' solve() calls on iterative deepening: %.2f%%\n\n", (double)(total_solve_calls - current_solve_calls) / total_solve_calls * 100);
+}
+
 static void print_map(void) {
+	print_iddfs_stats();
 	printf("width: %zu\n", width);
 	printf("height: %zu\n", height);
 	printf("player_x: %zu\n", player_x);
@@ -96,11 +104,7 @@ static void print_map(void) {
 	printf("empty_storages: %zu\n", empty_storages);
 	printf("path_length: %zu\n", path_length);
 	printf("path: '%.*s'\n", (int)path_length, path);
-	printf("current_solve_calls: %zu\n", current_solve_calls);
-	printf("total_solve_calls: %zu\n", total_solve_calls);
 	printf("depth: %zu\n", max_depth);
-	printf("branching factor: %.2f\n", pow((double)current_solve_calls, 1.0/max_depth)); // O(branching_factor ^ depth)
-	printf("'wasted' solve() calls on iterative deepening: %f%%\n", (double)(total_solve_calls - current_solve_calls) / total_solve_calls * 100);
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
 			printf("%c", x == player_x && y == player_y ? '@' : tile_to_char(map[y][x]));
@@ -476,6 +480,7 @@ int main(void) {
 		fprintf(stderr, "max_depth: %zu\n", max_depth);
 		reset();
 		solve(1);
+		print_iddfs_stats();
 	}
 
 	fprintf(stderr, "No solution was found :(\n");
