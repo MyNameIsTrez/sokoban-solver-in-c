@@ -56,3 +56,4 @@ The player is then able to push the box on the top to the left into the remainin
 - Allow the user to turn on the asan build by passing an optional command argument
 - Try using a swap-remove array in `bfs.c` instead of using `strdup()` + `free()`, by storing map strings and paths in a static array
 - Try turning `map` into a flattened 2D array, getting the index with `x + y * width`
+- Check if it's more efficient to combine `pushable_up`, `pushable_down`, `pushable_left` and `pushable_right` into a single `pushable[HEIGHT][WIDTH]`, where the values it holds are `enum pushable_direction { pushable_up=0x1, pushable_down=0x2, pushable_left=0x4, pushable_right=0x8 };`. Using `|=` and `&=`, directions can be set on and off.
