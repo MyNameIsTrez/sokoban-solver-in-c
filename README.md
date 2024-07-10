@@ -15,3 +15,5 @@
 - ? How to represent the map in such a way that only pushable edges are evaluated?
 - Let automated tests check that basic functionality works, with the most fragile feature being contiguous movable areas
 - Allow the user to turn on the asan build by passing an optional command argument
+- Try using a swap-remove array in `bfs.c` instead of using `strdup()` + `free()`, storing map strings in a static array
+- Try turning `map` into a flattened 2D array, getting the index with `x + y * width`
