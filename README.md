@@ -4,9 +4,9 @@
 
 `./tests.sh`
 
-## Playing solutions back
+## Visualizing solutions
 
-[Henry Kautz](https://henrykautz.com/sokoban/Sokoban.html) has a great website for this.
+[Henry Kautz](https://henrykautz.com/sokoban/Sokoban.html) has a great website for visualizing Sokoban maps and solutions. The [help](https://henrykautz.com/sokoban/help.html) button at the bottom of that page explains the file format his website expects.
 
 ## Future plans
 
