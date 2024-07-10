@@ -16,6 +16,7 @@ then
 fi
 
 # < maps/area_grows.txt ./a.out
+# < maps/area_requires_hashing.txt ./a.out
 # < maps/area_shrinks.txt ./a.out
 # < maps/box_on_storage.txt ./a.out
 # < maps/down_twice.txt ./a.out

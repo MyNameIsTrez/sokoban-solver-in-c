@@ -56,4 +56,3 @@ The player is then able to push the box on the top to the left into the remainin
 - Allow the user to turn on the asan build by passing an optional command argument
 - Try using a swap-remove array in `bfs.c` instead of using `strdup()` + `free()`, by storing map strings and paths in a static array
 - Try turning `map` into a flattened 2D array, getting the index with `x + y * width`
-- Hashing could be omitted entirely in `area.c` if there is no way for an infinite loop to appear
