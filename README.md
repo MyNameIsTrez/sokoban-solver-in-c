@@ -4,6 +4,10 @@
 
 `./tests.sh`
 
+## Playing solutions back
+
+[Henry Kautz](https://henrykautz.com/sokoban/Sokoban.html) has a great website for this.
+
 ## Future plans
 
 - Make version of the program that tracks contiguous movable areas, so that the solver doesn't have to move the player

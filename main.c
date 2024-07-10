@@ -413,8 +413,11 @@ static void reset(void) {
 int main(void) {
 	size_t n = 1;
 	char *line = malloc(n);
-	if (getline(&line, &n, stdin) == -1) {} // The first line is always a comment
 	while (getline(&line, &n, stdin) > 0) {
+		if (line[0] == '%') { // If this line is a comment
+			continue;
+		}
+
 		size_t len = 0;
 		while (line[len] != '\n') {
 			char c = line[len];
