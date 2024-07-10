@@ -1,5 +1,11 @@
 # Sokoban solver in C
 
+`bfs.c` ([breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search)) is best when the branching factor is near 1. The downside is that it runs out of memory in big maps.
+
+`iddfs.c` ([iterative deepening depth-first search](https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search)) is best when the branching factor is quite a big higher than 1. It doesn't run out of memory in big maps.
+
+`area.c` is based on `iddfs.c`, but the major difference is that it doesn't make the player walk around one step at a time. Instead, it tracks which tiles are reachable by the player, so that it knows which boxes the player is able to push, if the player were to walk up to them.
+
 ## Running
 
 `./tests.sh`
