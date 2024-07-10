@@ -10,7 +10,7 @@ Writing a solver for Sokoban is similar to writing a chess engine. Just like wit
 
 `iddfs.c` ([iterative deepening depth-first search](https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search)) is best when the branching factor is quite a bit higher than 1. It doesn't run out of memory in big maps.
 
-`area.c` is based on `iddfs.c`, but the major difference is that it doesn't make the player walk around one step at a time. Instead, it tracks which tiles are reachable by the player, so that it knows which boxes the player is able to push, if the player were to walk up to them.
+`area.c` is based on `iddfs.c`, but the major difference is that it doesn't make the player walk around one step at a time. Instead, it tracks which floor tiles are reachable by the player, so that it knows which boxes the player is able to push, if the player were to walk up to them. This way, the solver can just push boxes directly.
 
 ## Running
 
