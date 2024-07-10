@@ -6,7 +6,7 @@
 
 Writing a solver for Sokoban is similar to writing a chess engine. Just like with chess, the branching factor (the number of possible moves on each turn) of a complex Sokoban level can be ridiculously huge. The number of chess and Sokoban boards is `O(b^d)`, where `b` is the branching factor, and `d` is the depth of the shallowest solution. In other words, they both exhibit exponential growth.
 
-The [Sokobano wiki's Solver page](http://sokobano.de/wiki/index.php?title=Solver#Normalizing_the_player_position) contains lots of juicy tips on how to approach writing a solver.
+The [Sokobano wiki's Solver page](http://sokobano.de/wiki/index.php?title=Solver) contains lots of juicy tips on how to approach writing a solver.
 
 `bfs.c` ([breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search)) is best when the branching factor is near 1. The downside is that it runs out of memory in big maps.
 
