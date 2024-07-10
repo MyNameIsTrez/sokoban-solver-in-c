@@ -9,9 +9,9 @@
 #define MAX_WIDTH 420
 
 #define MAX_PATH_LENGTH 420420
-#define MAX_MAPS 420420
+#define MAX_MAPS 42420420
 #define MAX_MAP_STRING_LENGTH 420420
-#define MAX_MAP_STRINGS_CHARS 420420
+#define MAX_MAP_STRINGS_CHARS 420420420
 #define MAX_BUCKETS 420420
 
 typedef uint32_t u32;
@@ -79,6 +79,8 @@ static enum tile char_to_tile(char c) {
 			return BOX;
 		case '.':
 			return STORAGE;
+		case '*':
+			return STORED_BOX;
 	}
 	abort();
 }
@@ -431,9 +433,13 @@ int main(void) {
 		size_t len = 0;
 		while (line[len] != '\n') {
 			char c = line[len];
-			if (c == '@') {
+			if (c == '@' || c == '+') {
 				player_x = len;
 				player_y = height;
+				if (c == '+') {
+					empty_storages++;
+					map[height][len] = STORAGE;
+				}
 			} else {
 				enum tile t = char_to_tile(c);
 				if (t == STORAGE) {
@@ -449,6 +455,7 @@ int main(void) {
 	free(line);
 
 	print_map();
+	check_is_solved();
 
 	// See https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search
 	for (;;max_depth++) {
