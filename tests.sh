@@ -15,6 +15,8 @@ then
 	exit 1
 fi
 
+# < maps/area_grows.txt ./a.out
+# < maps/area_shrinks.txt ./a.out
 # < maps/box_on_storage.txt ./a.out
 # < maps/down_twice.txt ./a.out
 # < maps/left_twice.txt ./a.out
