@@ -16,11 +16,11 @@ then
 fi
 
 # < maps/area_grows.txt ./a.out
-# < maps/area_requires_hashing.txt ./a.out
 # < maps/area_shrinks.txt ./a.out
 # < maps/area_undo_floodfill_is_hard.txt ./a.out
 # < maps/box_on_storage.txt ./a.out
 # < maps/down_twice.txt ./a.out
+# < maps/impossible.txt ./a.out
 # < maps/left_twice.txt ./a.out
 # < maps/level_963.txt ./a.out
 # < maps/level_40862.txt ./a.out
