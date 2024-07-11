@@ -14,7 +14,7 @@ The [Sokobano wiki's Solver page](http://sokobano.de/wiki/index.php?title=Solver
 
 `area.c` is based on `iddfs.c`, but the major difference is that it doesn't make the player walk around one step at a time. Instead, it tracks which floor tiles are reachable by the player, so that it knows which boxes the player is able to push, if the player were to walk up to them. This way, the solver can just push reachable boxes directly. The implementation floodfills every time a box is pushed, where any time a new box is now exposed, it will recursively also get pushed. It IS NOT guaranteed to find the shortest path.
 
-## Visualizig reachable areas
+## Visualizing reachable areas
 
 The player is only able to move to the right here:
 
@@ -43,7 +43,9 @@ The player is then able to push the box on the top to the left into the remainin
 ######
 ```
 
-Another important detail to keep in mind that this:
+### Hash which area the player is standing in
+
+This:
 
 ```
 #####
@@ -59,7 +61,7 @@ Is a completely different setup from this:
 #####
 ```
 
-So this is why it is important for the hashing to take which area the player is standing in into account. This is done by getting the top-left reachable position of the player, and letting `stringify_map()` append the position to the hashed string.
+So this is why it is important that these don't hash to the same string. This is achieved by taking the top-left reachable position of the player, and letting `stringify_map()` append the position to the hashed string.
 
 ## Running
 
