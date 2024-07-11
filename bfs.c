@@ -460,23 +460,22 @@ static void solve(void) {
 				chains[maps_size] = buckets[bucket_index];
 				buckets[bucket_index] = maps_size++;
 
+				up();
+				down();
+				left();
+				right();
+
 				break;
 			}
 
 			if (strcmp(map_string, maps[i]) == 0) {
 				// printf("Already memoized path '%s'\n", path);
-				goto memoized; // Memoization, by stopping if the map_string has been seen before
+				break; // Memoization, by stopping if the map_string has been seen before
 			}
 
 			i = chains[i];
 		}
 
-		up();
-		down();
-		left();
-		right();
-
-memoized:
 		free(map_string);
 		free(e.path);
 	}
