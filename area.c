@@ -34,6 +34,12 @@ enum push_direction {
 	pushing_right = 0x8,
 };
 
+struct move {
+	size_t x;
+	size_t y;
+	enum push_direction direction;
+};
+
 static enum tile map[MAX_HEIGHT][MAX_WIDTH];
 
 static size_t width = 0;
@@ -45,6 +51,9 @@ static size_t current_solve_calls;
 static size_t total_solve_calls;
 
 static size_t max_depth = 1;
+
+static struct move path[MAX_PATH_LENGTH];
+static size_t path_length;
 
 static char *maps[MAX_MAPS];
 static size_t map_depths[MAX_MAPS];
@@ -103,6 +112,16 @@ static void print_map(void) {
 	printf("width: %zu\n", width);
 	printf("height: %zu\n", height);
 	printf("empty_storages: %zu\n", empty_storages);
+	printf("path_length: %zu\n", path_length);
+	printf("path:\n");
+	for (size_t i = 0; i < path_length; i++) {
+		struct move m = path[i];
+		printf("Push %s (%zu,%zu)\n",
+			m.direction == pushing_up ? "up" :
+			m.direction == pushing_down ? "down" :
+			m.direction == pushing_left ? "left" : "right"
+			, m.x, m.y);
+	}
 	printf("depth: %zu\n", max_depth);
 	for (size_t y = 0; y < height; y++) {
 		for (size_t x = 0; x < width; x++) {
@@ -129,6 +148,7 @@ static void push_up(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGHT]
 	if (map[y][x] == BOX) {
 		fprintf(stderr, "In push_up(), BOX is seen\n");
 
+		path[path_length++] = (struct move){.x=x, .y=y, .direction=pushing_up};
 		map[y][x] = FLOOR;
 		map[y-1][x] = map[y-1][x] == FLOOR ? BOX : STORED_BOX;
 		if (map[y-1][x] == STORED_BOX) {
@@ -138,6 +158,7 @@ static void push_up(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGHT]
 
 		solve(x, y, depth+1, reachable, pushable);
 
+		path_length--;
 		if (map[y-1][x] == STORED_BOX) {
 			empty_storages++;
 		}
@@ -146,6 +167,7 @@ static void push_up(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGHT]
 	} else if (map[y][x] == STORED_BOX) {
 		fprintf(stderr, "In push_up(), STORED_BOX is seen\n");
 
+		path[path_length++] = (struct move){.x=x, .y=y, .direction=pushing_up};
 		map[y][x] = STORAGE;
 		map[y-1][x] = map[y-1][x] == FLOOR ? BOX : STORED_BOX;
 		empty_storages++;
@@ -155,6 +177,7 @@ static void push_up(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGHT]
 
 		solve(x, y, depth+1, reachable, pushable);
 
+		path_length--;
 		empty_storages--;
 		if (map[y-1][x] == STORED_BOX) {
 			empty_storages++;
@@ -170,6 +193,7 @@ static void push_down(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGH
 	if (map[y][x] == BOX) {
 		fprintf(stderr, "In push_down(), BOX is seen\n");
 
+		path[path_length++] = (struct move){.x=x, .y=y, .direction=pushing_down};
 		map[y][x] = FLOOR;
 		map[y+1][x] = map[y+1][x] == FLOOR ? BOX : STORED_BOX;
 		if (map[y+1][x] == STORED_BOX) {
@@ -179,6 +203,7 @@ static void push_down(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGH
 
 		solve(x, y, depth+1, reachable, pushable);
 
+		path_length--;
 		if (map[y+1][x] == STORED_BOX) {
 			empty_storages++;
 		}
@@ -187,6 +212,7 @@ static void push_down(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGH
 	} else if (map[y][x] == STORED_BOX) {
 		fprintf(stderr, "In push_down(), STORED_BOX is seen\n");
 
+		path[path_length++] = (struct move){.x=x, .y=y, .direction=pushing_down};
 		map[y][x] = STORAGE;
 		map[y+1][x] = map[y+1][x] == FLOOR ? BOX : STORED_BOX;
 		empty_storages++;
@@ -196,6 +222,7 @@ static void push_down(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGH
 
 		solve(x, y, depth+1, reachable, pushable);
 
+		path_length--;
 		empty_storages--;
 		if (map[y+1][x] == STORED_BOX) {
 			empty_storages++;
@@ -211,6 +238,7 @@ static void push_left(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGH
 	if (map[y][x] == BOX) {
 		fprintf(stderr, "In push_left(), BOX is seen\n");
 
+		path[path_length++] = (struct move){.x=x, .y=y, .direction=pushing_left};
 		map[y][x] = FLOOR;
 		map[y][x-1] = map[y][x-1] == FLOOR ? BOX : STORED_BOX;
 		if (map[y][x-1] == STORED_BOX) {
@@ -220,6 +248,7 @@ static void push_left(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGH
 
 		solve(x, y, depth+1, reachable, pushable);
 
+		path_length--;
 		if (map[y][x-1] == STORED_BOX) {
 			empty_storages++;
 		}
@@ -228,6 +257,7 @@ static void push_left(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGH
 	} else if (map[y][x] == STORED_BOX) {
 		fprintf(stderr, "In push_left(), STORED_BOX is seen\n");
 
+		path[path_length++] = (struct move){.x=x, .y=y, .direction=pushing_left};
 		map[y][x] = STORAGE;
 		map[y][x-1] = map[y][x-1] == FLOOR ? BOX : STORED_BOX;
 		empty_storages++;
@@ -237,6 +267,7 @@ static void push_left(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIGH
 
 		solve(x, y, depth+1, reachable, pushable);
 
+		path_length--;
 		empty_storages--;
 		if (map[y][x-1] == STORED_BOX) {
 			empty_storages++;
@@ -252,6 +283,7 @@ static void push_right(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIG
 	if (map[y][x] == BOX) {
 		fprintf(stderr, "In push_right(), BOX is seen\n");
 
+		path[path_length++] = (struct move){.x=x, .y=y, .direction=pushing_right};
 		map[y][x] = FLOOR;
 		map[y][x+1] = map[y][x+1] == FLOOR ? BOX : STORED_BOX;
 		if (map[y][x+1] == STORED_BOX) {
@@ -261,6 +293,7 @@ static void push_right(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIG
 
 		solve(x, y, depth+1, reachable, pushable);
 
+		path_length--;
 		if (map[y][x+1] == STORED_BOX) {
 			empty_storages++;
 		}
@@ -269,6 +302,7 @@ static void push_right(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIG
 	} else if (map[y][x] == STORED_BOX) {
 		fprintf(stderr, "In push_right(), STORED_BOX is seen\n");
 
+		path[path_length++] = (struct move){.x=x, .y=y, .direction=pushing_right};
 		map[y][x] = STORAGE;
 		map[y][x+1] = map[y][x+1] == FLOOR ? BOX : STORED_BOX;
 		empty_storages++;
@@ -278,6 +312,7 @@ static void push_right(size_t x, size_t y, size_t depth, bool reachable[MAX_HEIG
 
 		solve(x, y, depth+1, reachable, pushable);
 
+		path_length--;
 		empty_storages--;
 		if (map[y][x+1] == STORED_BOX) {
 			empty_storages++;
