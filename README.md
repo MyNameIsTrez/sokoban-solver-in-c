@@ -43,6 +43,24 @@ The player is then able to push the box on the top to the left into the remainin
 ######
 ```
 
+Another important detail to keep in mind that this:
+
+```
+#####
+#@$.#
+#####
+```
+
+Is a completely different setup from this:
+
+```
+#####
+# $+#
+#####
+```
+
+So this is why it is important for the hashing to take which area the player is standing in into account. This is done by getting the top-left reachable position of the player, and letting `stringify_map()` append the position to the hashed string.
+
 ## Running
 
 `./tests.sh`
