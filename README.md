@@ -58,4 +58,6 @@ The player is then able to push the box on the top to the left into the remainin
 - Allow the user to turn on the asan build by passing an optional command argument
 - Try using a swap-remove array in `bfs.c` instead of using `strdup()` + `free()`, by storing map strings and paths in a static array
 - Try turning `map` into a flattened 2D array, getting the index with `x + y * width`
-- Check if it's more efficient to combine `pushable_up`, `pushable_down`, `pushable_left` and `pushable_right` into a single `pushable[HEIGHT][WIDTH]`, where the values it holds are `enum pushable_direction { pushable_up=0x1, pushable_down=0x2, pushable_left=0x4, pushable_right=0x8 };`. Using `|=` and `&=`, directions can be set on and off.
+- Profile whether turning `area.c` its `pushable` array from a local one into a global one, by having its values be `struct push { enum push_direction; size_t x; size_t y; };`. Every solve() call has `size_t starting_pushable_length = pushable_length;`
+- Profile whether using `:char` is faster for the enum than the default type of `:int` (note that this requires compiling with `-std=c2x`)
+- Replace the `y--;` -> `solve(x, y);` -> `y++;` in `up()`, `down()`, `left()` and `right()` with `solve(x, y-1);`, in `iddfs.c` and `bfs.c`
