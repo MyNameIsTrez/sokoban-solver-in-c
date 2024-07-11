@@ -420,7 +420,7 @@ static void solve(size_t depth) {
 		}
 
 		if (strcmp(map_string, maps[i]) == 0) {
-			if (map_depths[i] > depth) { // If a less deep path to the same map was found
+			if (depth < map_depths[i]) {
 				map_depths[i] = depth;
 				break;
 			} else {
