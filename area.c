@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -482,7 +483,7 @@ int main(void) {
 	size_t n = 1;
 	char *line = malloc(n);
 	while (getline(&line, &n, stdin) > 0) {
-		if (line[0] == '%') { // If this line is a comment
+		if (line[0] == '%' || isspace(line[0])) { // If this line is a comment or whitespace
 			continue;
 		}
 
