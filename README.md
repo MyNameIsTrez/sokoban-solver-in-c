@@ -16,16 +16,16 @@ The [Sokobano wiki's Solver page](http://sokobano.de/wiki/index.php?title=Solver
 
 ## Puzzle file format
 
-| Character | Name |
-| --------- | ---- |
-| `%`       | Comment Line |
-| `#`       | Wall |
-| `$`       | Box |
-| `.`       | Storage |
-| ` `       | Floor |
-| `@`       | Player |
+| Character | Name              |
+| --------- | ----------------- |
+| `%`       | Comment Line      |
+| `#`       | Wall              |
+| `$`       | Box               |
+| `.`       | Storage           |
+| ` `       | Floor             |
+| `@`       | Player            |
 | `+`       | Player on Storage |
-| `*`       | Box on Storage |
+| `*`       | Box on Storage    |
 
 ## Visualizing reachable areas
 
