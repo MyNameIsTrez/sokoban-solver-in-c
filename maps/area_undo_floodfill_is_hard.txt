@@ -1,0 +1,7 @@
+% If you push the box to the right here,
+% the floodfill *won't* cause the area above the box to become unreachable
+######
+#   ##
+# # ##
+# @$ #
+######
