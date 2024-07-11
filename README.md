@@ -96,3 +96,4 @@ This is achieved by taking the top-left reachable position of the player, and le
 - Profile whether turning `area.c` its `pushable` array from a local one into a global one, by having its values be `struct push { enum push_direction; size_t x; size_t y; };`. Every solve() call has `size_t starting_pushable_length = pushable_length;`
 - Profile whether using `:char` is faster for the enum than the default type of `:int` (note that this requires compiling with `-std=c2x`)
 - Replace the `y--;` -> `solve(x, y);` -> `y++;` in `up()`, `down()`, `left()` and `right()` with `solve(x, y-1);`, in `iddfs.c` and `bfs.c`
+- Right now `area.c` floodfills for every single `solve()` call. Instead, find a way to let `push_up()` make a copy of the parent's `pushable` array, and then clear the bits of any box sides that aren't pushable anymore.
