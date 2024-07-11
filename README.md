@@ -18,7 +18,7 @@ The [Sokobano wiki's Solver page](http://sokobano.de/wiki/index.php?title=Solver
 
 | Character | Name              |
 | --------- | ----------------- |
-| `%`       | Comment Line      |
+| `%`       | Comment           |
 | `#`       | Wall              |
 | `$`       | Box               |
 | `.`       | Storage           |
