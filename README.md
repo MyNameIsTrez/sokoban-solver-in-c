@@ -14,7 +14,7 @@ The [Sokobano wiki's Solver page](http://sokobano.de/wiki/index.php?title=Solver
 
 `area.c` is based on `iddfs.c`, but the major difference is that it doesn't make the player walk around one step at a time. Instead, it tracks which floor tiles are reachable by the player, so that it knows which boxes the player is able to push, if the player were to walk up to them. This way, the solver can just push reachable boxes directly. The implementation floodfills every time a box is pushed, where any time a new box is now exposed, it will recursively also get pushed. It IS NOT guaranteed to find the shortest path.
 
-## Puzzle file format
+## Map format
 
 | Character | Name              |
 | --------- | ----------------- |
